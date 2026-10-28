@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Assessment Result')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar('/assessments')}"></aside>
+    <div class="main">
+        <header th:replace="~{fragments/layout :: topbar}"></header>
+        <main class="content">
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                <div>
+                    <h2 class="page-title mb-1" th:text="${attempt.assessment.title}">Assessment</h2>
+                    <p class="page-subtitle mb-0">
+                        Completed <span th:text="${@ui.dateTime(attempt.completedAt)}">date</span>
+                        &middot; <span th:text="${attempt.correctCount} + '/' + ${attempt.totalQuestions}">0/0</span>
+                        correct
+                    </p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a class="btn btn-outline-secondary" th:href="@{/assessments}">&larr; All assessments</a>
+                    <form th:action="@{/assessments/attempts/{id}/apply(id=${attempt.id})}" method="post">
+                        <button class="btn btn-primary" type="submit" th:disabled="${attempt.appliedToProfile}"
+                                th:text="${attempt.appliedToProfile} ? 'Applied to profile' : 'Apply score to my profile'">
+                            Apply score
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="row g-3 mt-1">
+                <div class="col-6 col-lg-3">
+                    <div class="card stat-card">
+                        <div class="stat-label">Score</div>
+                        <div class="stat-value" th:text="${attempt.scorePercent} + '%'">0%</div>
+                        <div class="muted" style="font-size:0.75rem">
+                            pass mark <span th:text="${attempt.assessment.passingScore} + '%'">60%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card stat-card">
+                        <div class="stat-label">Result</div>
+                        <div class="stat-value" th:text="${attempt.passed} ? 'Passed' : 'Not passed'">Passed</div>
+                        <div class="muted" style="font-size:0.75rem" th:text="${attempt.assessment.skill.name}">skill</div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card stat-card">
+                        <div class="stat-label">Derived level</div>
+                        <div class="stat-value" th:text="${@ui.levelLabelForScore(attempt.scorePercent)}">3</div>
+                        <div class="muted" style="font-size:0.75rem">if you apply this score</div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card stat-card">
+                        <div class="stat-label">Profile status</div>
+                        <div class="stat-value" style="font-size:1rem; padding-top:0.6rem"
+                             th:text="${attempt.appliedToProfile} ? 'Applied' : 'Not applied'">Not applied</div>
+                        <div class="muted" style="font-size:0.75rem">scores apply only on request</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">Your answers</div>
+                <div class="card-body p-0">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                        <tr><th>Question</th><th>Your answer</th><th>Correct answer</th><th>Result</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="a : ${answers}">
+                            <td th:text="${a.question.questionText}">Question</td>
+                            <td th:text="${a.selectedOption != null} ? ${a.selectedOption.optionText} : '(no answer)'">ans</td>
+                            <td th:text="${@ui.correctAnswer(a.question)}">correct</td>
+                            <td>
+                                <span th:class="${a.correct} ? 'badge badge-met' : 'badge badge-low'"
+                                      th:text="${a.correct} ? 'Correct' : 'Wrong'">Correct</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+<script th:src="@{/vendor/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Login')}"></head>
+<body>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5 col-lg-4">
+            <div class="card">
+                <div class="card-body p-4">
+                    <h4 class="mb-1">Skill Gap Dashboard</h4>
+                    <p class="muted mb-4">Sign in to continue.</p>
+
+                    <div class="alert alert-success" th:if="${message}" th:text="${message}">Logged out.</div>
+                    <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}">Error.</div>
+
+                    <form th:action="@{/login}" method="post">
+                        <div class="mb-3">
+                            <label class="form-label" for="username">Email</label>
+                            <input class="form-control" type="email" id="username" name="username"
+                                   required autocomplete="username">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="password">Password</label>
+                            <input class="form-control" type="password" id="password" name="password"
+                                   required autocomplete="current-password">
+                        </div>
+                        <button class="btn btn-primary w-100" type="submit">Log in</button>
+                    </form>
+
+                    <p class="mt-3 mb-0 muted">
+                        No account? <a th:href="@{/register}">Create one</a>
+                    </p>
+                    <hr>
+                    <p class="muted mb-0" style="font-size:0.8rem">
+                        Demo user: demo@example.com / Demo@123 &middot; Admin: admin@example.com / Admin@123
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

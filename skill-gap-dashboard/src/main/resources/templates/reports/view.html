@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Skill Gap Report')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar('/reports')}"></aside>
+    <div class="main">
+        <header th:replace="~{fragments/layout :: topbar}"></header>
+        <main class="content report-sheet">
+
+            <div class="d-flex justify-content-between align-items-center no-print">
+                <a class="btn btn-outline-secondary btn-sm" th:href="@{/reports}">&larr; All reports</a>
+                <button class="btn btn-primary btn-sm" type="button" onclick="window.print()">Print / Save as PDF</button>
+            </div>
+
+            <!-- Report header -->
+            <div class="card mt-3 report-block">
+                <div class="card-body">
+                    <h2 class="mb-1">Skill Gap Analysis Report</h2>
+                    <p class="muted mb-2">
+                        Prepared for <strong th:text="${report.user.fullName}">Name</strong>
+                        (<span th:text="${report.user.email}">email</span>)
+                    </p>
+                    <table class="table table-sm mb-0">
+                        <tbody>
+                        <tr>
+                            <th style="width:220px">Target</th>
+                            <td th:text="${report.session.targetLabel}">Java Developer</td>
+                        </tr>
+                        <tr>
+                            <th>Target type</th>
+                            <td th:text="${report.session.targetType}">JOB_ROLE</td>
+                        </tr>
+                        <tr>
+                            <th>Analysis date</th>
+                            <td th:text="${@ui.dateTime(report.session.analyzedAt)}">date</td>
+                        </tr>
+                        <tr>
+                            <th>Role alignment (weighted)</th>
+                            <td><strong th:text="${@ui.pct(report.analysis.alignmentPercentage)}">0%</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Calculation notes</th>
+                            <td th:text="${report.analysis.notes}">notes</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <p class="muted mt-2 mb-0" style="font-size:0.8rem">
+                        Alignment = 100 &times; &Sigma;(weight &times; min(current, required) / required) / &Sigma;weights
+                        over required skills. Unassessed skills count as level 0. This figure is a study-planning
+                        estimate, not a guarantee of employability.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Full skill table -->
+            <div class="card mt-3 report-block">
+                <div class="card-header">Current vs required skills</div>
+                <div class="card-body p-0">
+                    <table class="table table-sm table-striped">
+                        <thead>
+                        <tr>
+                            <th>Skill</th><th>Current</th><th>Required</th><th class="text-end">Gap</th>
+                            <th class="text-end">Gap %</th><th class="text-end">Weight</th><th>Priority</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="d : ${report.details}">
+                            <td th:text="${d.skill.name}">Java</td>
+                            <td th:text="${d.assessed} ? ${@ui.levelLabel(d.currentLevel)} : 'Unassessed'">level</td>
+                            <td th:text="${@ui.levelLabel(d.requiredLevel)}">level</td>
+                            <td class="text-end" th:text="${d.gap}">0</td>
+                            <td class="text-end" th:text="${d.gapPercentage + '%'}">0%</td>
+                            <td class="text-end" th:text="${d.weight}">3</td>
+                            <td th:text="${d.priority}">HIGH</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Recommended actions -->
+            <div class="card mt-3 report-block">
+                <div class="card-header">Recommended learning actions (in order)</div>
+                <div class="card-body">
+                    <ol class="mb-0" th:if="${!report.gaps().isEmpty()}">
+                        <li th:each="d : ${report.gaps()}" class="mb-1">
+                            <strong th:text="${d.skill.name}">Skill</strong>
+                            <span th:text="${d.assessed} ? '- ' + ${d.priority} + ', gap ' + ${d.gap} + ' (level ' + ${d.currentLevel} + ')' : '- ' + ${d.priority} + ', unassessed (required level ' + ${d.requiredLevel} + ')'">detail</span>
+                            <span class="muted" th:text="${d.recommendation}">recommendation</span>
+                        </li>
+                    </ol>
+                    <p class="muted mb-0" th:if="${report.gaps().isEmpty()}">No open gaps for this target.</p>
+                </div>
+            </div>
+
+            <!-- Strengths -->
+            <div class="card mt-3 report-block">
+                <div class="card-header">Strengths</div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2" th:if="${!report.strengths().isEmpty()}">
+                        <span class="badge badge-met" th:each="d : ${report.strengths()}"
+                              th:text="${d.skill.name} + ' (' + ${@ui.levelLabel(d.currentLevel)} + ')'">Java</span>
+                    </div>
+                    <p class="muted mb-0" th:if="${report.strengths().isEmpty()}">No skill fully meets the target yet.</p>
+                </div>
+            </div>
+
+            <!-- Unassessed -->
+            <div class="card mt-3 report-block" th:if="${!report.unassessed().isEmpty()}">
+                <div class="card-header">Missing / unassessed skills</div>
+                <div class="card-body">
+                    <p>These required skills have no recorded level and were counted as 0 in the calculation.
+                        Unassessed does not mean absent ability - assess them to refine this report.</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge badge-high" th:each="d : ${report.unassessed()}"
+                              th:text="${d.skill.name}">Skill</span>
+                    </div>
+                </div>
+            </div>
+
+            <p class="muted mt-3 no-print" style="font-size:0.75rem">
+                Generated by Skill Gap Dashboard on <span th:text="${@ui.dateTime(report.session.analyzedAt)}">date</span>.
+            </p>
+
+        </main>
+    </div>
+</div>
+<script th:src="@{/vendor/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

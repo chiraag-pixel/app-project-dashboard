@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Admin - Skills')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar('/admin')}"></aside>
+    <div class="main">
+        <header th:replace="~{fragments/layout :: topbar}"></header>
+        <main class="content">
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="page-title">Skill catalog</h2>
+                <a class="btn btn-outline-secondary btn-sm" th:href="@{/admin}">&larr; Admin home</a>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-lg-5">
+                    <div class="card">
+                        <div class="card-header">Add skill</div>
+                        <div class="card-body">
+                            <form th:action="@{/admin/skills/add}" method="post">
+                                <div class="mb-3">
+                                    <label class="form-label" for="sName">Name *</label>
+                                    <input class="form-control" id="sName" name="name" required placeholder="e.g. Kubernetes">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="sCat">Category</label>
+                                    <select class="form-select" id="sCat" name="categoryId">
+                                        <option value="">-- none --</option>
+                                        <option th:each="c : ${categories}" th:value="${c.id}"
+                                                th:text="${c.name}">Category</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="sDesc">Description</label>
+                                    <input class="form-control" id="sDesc" name="description" placeholder="Optional">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="sAliases">Aliases (comma separated)</label>
+                                    <input class="form-control" id="sAliases" name="aliases"
+                                           placeholder="k8s, kube">
+                                    <div class="muted" style="font-size:0.78rem">Used by the rule-based extraction engine.</div>
+                                </div>
+                                <button class="btn btn-primary" type="submit">Add skill</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-7">
+                    <div class="card h-100">
+                        <div class="card-header">Catalog (<span th:text="${skills.size()}">0</span>)</div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead><tr><th>Skill</th><th>Category</th><th class="text-end">Actions</th></tr></thead>
+                                    <tbody>
+                                    <tr th:each="skill : ${skills}">
+                                        <form th:action="@{/admin/skills/{id}/update(id=${skill.id})}" method="post">
+                                            <td>
+                                                <input class="form-control form-control-sm" name="name"
+                                                       th:value="${skill.name}" required style="min-width:9rem">
+                                            </td>
+                                            <td>
+                                                <select class="form-select form-select-sm" name="categoryId"
+                                                        style="min-width:9rem">
+                                                    <option value="">-- none --</option>
+                                                    <option th:each="c : ${categories}" th:value="${c.id}"
+                                                            th:text="${c.name}"
+                                                            th:selected="${skill.category != null and skill.category.id == c.id}">Category</option>
+                                                </select>
+                                                <input class="form-control form-control-sm mt-1" name="aliases"
+                                                       th:value="${skill.aliases}" placeholder="aliases">
+                                            </td>
+                                            <td class="text-end text-nowrap">
+                                                <button class="btn btn-sm btn-primary" type="submit">Save</button>
+                                                <button class="btn btn-sm btn-outline-danger" type="submit"
+                                                        th:formaction="@{/admin/skills/{id}/delete(id=${skill.id})}"
+                                                        data-confirm="Delete this skill from the catalog?">Delete</button>
+                                            </td>
+                                        </form>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+<script th:src="@{/vendor/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Profile')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar('/profile')}"></aside>
+    <div class="main">
+        <header th:replace="~{fragments/layout :: topbar}"></header>
+        <main class="content">
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <h2 class="page-title">Profile</h2>
+            <p class="page-subtitle">Your personal details, target role, certifications and projects.</p>
+
+            <div class="row g-3">
+                <!-- Profile details -->
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">My details</div>
+                        <div class="card-body">
+                            <form th:action="@{/profile/update}" th:object="${profileForm}" method="post">
+                                <div class="mb-3">
+                                    <label class="form-label" for="fullName">Full name</label>
+                                    <input class="form-control" th:field="*{fullName}" id="fullName" required>
+                                    <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('fullName')}"
+                                         th:errors="*{fullName}">error</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input class="form-control" th:value="${#authentication.name}" disabled>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="education">Education</label>
+                                    <input class="form-control" th:field="*{education}" id="education"
+                                           placeholder="e.g. B.Tech Computer Science, 2025">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="experience">Experience</label>
+                                    <textarea class="form-control" rows="3" th:field="*{experience}" id="experience"
+                                              placeholder="Internships, projects, jobs..."></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="careerInterests">Career interests</label>
+                                    <textarea class="form-control" rows="2" th:field="*{careerInterests}"
+                                              id="careerInterests"
+                                              placeholder="e.g. Backend development, cloud technologies"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="targetJobRole">Target job role</label>
+                                    <select class="form-select" th:field="*{targetJobRoleId}" id="targetJobRole">
+                                        <option value="">-- none selected --</option>
+                                        <option th:each="role : ${jobRoles}" th:value="${role.id}"
+                                                th:text="${role.name}">Java Developer</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary" type="submit">Save profile</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <!-- Certifications -->
+                    <div class="card mb-3">
+                        <div class="card-header">Certifications
+                            <span class="muted">(supporting evidence only)</span>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm" th:if="${!certifications.isEmpty()}">
+                                <thead>
+                                <tr><th>Name</th><th>Organization</th><th>Date</th><th></th></tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="cert : ${certifications}">
+                                    <td>
+                                        <span th:text="${cert.name}">Certificate</span>
+                                        <div class="muted" th:if="${cert.skill != null}"
+                                             th:text="'related skill: ' + ${cert.skill.name}">skill</div>
+                                    </td>
+                                    <td th:text="${cert.organization}">Org</td>
+                                    <td th:text="${cert.issueDate != null} ? ${cert.issueDate} : '-'">2025-01-01</td>
+                                    <td class="text-end">
+                                        <form th:action="@{/profile/certifications/{id}/delete(id=${cert.id})}"
+                                              method="post" class="d-inline">
+                                            <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                            <p class="muted" th:if="${certifications.isEmpty()}">No certifications recorded.</p>
+                            <form th:action="@{/profile/certifications/add}" th:object="${certificationForm}"
+                                  method="post" class="row g-2 mt-1">
+                                <div class="col-sm-5">
+                                    <input class="form-control" th:field="*{name}" placeholder="Certification name"
+                                           required>
+                                </div>
+                                <div class="col-sm-4">
+                                    <input class="form-control" th:field="*{organization}" placeholder="Issued by"
+                                           required>
+                                </div>
+                                <div class="col-sm-3">
+                                    <input class="form-control" type="date" th:field="*{issueDate}">
+                                </div>
+                                <div class="col-sm-8">
+                                    <input class="form-control" th:field="*{credentialUrl}"
+                                           placeholder="Credential URL (optional)">
+                                </div>
+                                <div class="col-sm-4">
+                                    <select class="form-select" th:field="*{skillId}">
+                                        <option value="">Related skill (optional)</option>
+                                        <option th:each="skill : ${catalogSkills}" th:value="${skill.id}"
+                                                th:text="${skill.name}">Java</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <button class="btn btn-sm btn-primary" type="submit">Add certification</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Projects -->
+                    <div class="card">
+                        <div class="card-header">Projects &amp; portfolio
+                            <span class="muted">(supporting evidence only)</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3" th:each="project : ${projects}">
+                                <strong th:text="${project.title}">Project</strong>
+                                <div class="muted" th:text="${project.description}">desc</div>
+                                <div class="muted">
+                                    <span th:text="${project.technologies}">technologies</span>
+                                    <a th:if="${project.projectUrl != null}" th:href="${project.projectUrl}"
+                                       target="_blank" rel="noopener">link</a>
+                                </div>
+                                <form th:action="@{/profile/projects/{id}/delete(id=${project.id})}" method="post"
+                                      class="d-inline">
+                                    <button class="btn btn-sm btn-outline-danger mt-1" type="submit">Delete</button>
+                                </form>
+                            </div>
+                            <p class="muted" th:if="${projects.isEmpty()}">No projects recorded.</p>
+                            <form th:action="@{/profile/projects/add}" th:object="${projectForm}" method="post"
+                                  class="row g-2 mt-1">
+                                <div class="col-sm-6">
+                                    <input class="form-control" th:field="*{title}" placeholder="Project title" required>
+                                </div>
+                                <div class="col-sm-6">
+                                    <input class="form-control" th:field="*{technologies}"
+                                           placeholder="Technologies used (comma separated)">
+                                </div>
+                                <div class="col-12">
+                                    <textarea class="form-control" rows="2" th:field="*{description}"
+                                              placeholder="What you built and what you learned"></textarea>
+                                </div>
+                                <div class="col-sm-6">
+                                    <input class="form-control" type="url" th:field="*{projectUrl}"
+                                           placeholder="https://github.com/...">
+                                </div>
+                                <div class="col-sm-3">
+                                    <input class="form-control" type="date" th:field="*{completedDate}">
+                                </div>
+                                <div class="col-12">
+                                    <button class="btn btn-sm btn-primary" type="submit">Add project</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+<script th:src="@{/vendor/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

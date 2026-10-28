@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Dashboard')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar('/dashboard')}"></aside>
+    <div class="main">
+        <header th:replace="~{fragments/layout :: topbar}"></header>
+        <main class="content">
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <h2 class="page-title">Dashboard</h2>
+            <p class="page-subtitle">Your real skill data - updated from every skill, assessment and analysis you save.</p>
+
+            <!-- Empty state for brand-new users -->
+            <div class="empty-state mb-4" th:if="${!data.hasAnyData}">
+                <h5>Welcome! Let's get started</h5>
+                <p class="mb-3">You have no data yet. Complete these three steps to see your first results:</p>
+                <ol class="text-start d-inline-block text-muted">
+                    <li><a th:href="@{/skills}">Add your first skills</a> in My Skills (or upload a resume).</li>
+                    <li>Choose a target in <a th:href="@{/job-roles}">Job Roles</a>.</li>
+                    <li>Run your first <a th:href="@{/analysis}">Skill Gap Analysis</a>.</li>
+                </ol>
+                <div class="mt-3">
+                    <a class="btn btn-primary" th:href="@{/skills}">Add skills</a>
+                    <a class="btn btn-outline-primary" th:href="@{/analysis}">Start analysis</a>
+                </div>
+            </div>
+
+            <!-- Stat cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-lg-3">
+                    <div class="card stat-card h-100">
+                        <div class="stat-value" th:text="${data.skillCount}">0</div>
+                        <div class="stat-label">Skills recorded</div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card stat-card h-100">
+                        <div class="stat-value" th:text="${data.assessmentCount}">0</div>
+                        <div class="stat-label">Assessments completed</div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card stat-card h-100">
+                        <div class="stat-value"
+                             th:text="${data.latestAnalysis != null} ? ${data.latestAnalysis.criticalCount} : '—'">—</div>
+                        <div class="stat-label">Critical skill gaps</div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card stat-card h-100">
+                        <div class="stat-value"
+                             th:text="${data.roadmapTaskCount > 0} ? ${data.roadmapProgressPercent} + '%' : '—'">—</div>
+                        <div class="stat-label">Roadmap completion</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <!-- Target + alignment -->
+                <div class="col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-header">Estimated role alignment</div>
+                        <div class="card-body">
+                            <p class="mb-1 muted">Target</p>
+                            <p class="mb-2">
+                                <strong th:if="${data.targetRole != null}" th:text="${data.targetRole.name}">Java Developer</strong>
+                                <span th:if="${data.targetRole == null}" class="muted">No target role set -
+                                    <a th:href="@{/profile}">set it in your profile</a>.</span>
+                                <span th:if="${data.latestSession != null}" class="muted">
+                                    &middot; last analysis: <span th:text="${data.latestSession.targetLabel}">role</span>
+                                </span>
+                            </p>
+                            <div th:if="${data.latestAnalysis != null}">
+                                <div class="display-6 fw-bold text-primary"
+                                     th:text="${data.latestAnalysis.alignmentPercentage} + '%'">0%</div>
+                                <div class="progress my-2">
+                                    <div class="progress-bar" role="progressbar"
+                                         th:style="'width:' + ${data.latestAnalysis.alignmentPercentage} + '%'"></div>
+                                </div>
+                                <p class="muted mb-0" style="font-size:0.82rem">
+                                    Weighted alignment against required skills. It is an estimate of fit for this
+                                    target - not a guarantee of employability.
+                                </p>
+                                <a class="btn btn-sm btn-outline-primary mt-2"
+                                   th:href="@{/analysis/{id}(id=${data.latestSession.id})}">View analysis</a>
+                            </div>
+                            <div th:if="${data.latestAnalysis == null}" class="muted">
+                                No analysis yet. <a th:href="@{/analysis}">Run your first analysis</a>.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current vs required chart -->
+                <div class="col-lg-8">
+                    <div class="card h-100">
+                        <div class="card-header">Current skill levels vs required levels</div>
+                        <div class="card-body">
+                            <div class="chart-box" th:if="${data.latestAnalysis != null}">
+                                <canvas id="skillsChart"></canvas>
+                            </div>
+                            <div class="empty-state" th:if="${data.latestAnalysis == null}">
+                                <p class="mb-0">Run an analysis to compare your skills with a target role.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <!-- Skills needing improvement -->
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header">Skills needing improvement</div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive" th:if="${!data.topGaps.isEmpty()}">
+                                <table class="table table-hover">
+                                    <thead>
+                                    <tr><th>Skill</th><th>Current</th><th>Required</th><th>Priority</th></tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:each="gap : ${data.topGaps}">
+                                        <td th:text="${gap.skill.name}">Java</td>
+                                        <td th:text="${gap.assessed} ? ${gap.currentLevel} : 'unassessed'">2</td>
+                                        <td th:text="${gap.requiredLevel}">4</td>
+                                        <td>
+                                            <span th:class="|badge ${@ui.priorityBadge(gap.priority)}|"
+                                                  th:text="${gap.priority}">CRITICAL</span>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p class="p-3 mb-0 muted" th:if="${data.topGaps.isEmpty()}">
+                                No open gaps in your latest analysis - or no analysis yet.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Roadmap progress -->
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header">Learning roadmap progress</div>
+                        <div class="card-body">
+                            <div th:if="${data.roadmapTaskCount > 0}">
+                                <p class="mb-1">
+                                    <strong th:text="${data.roadmapProgressPercent} + '%'">50%</strong>
+                                    of <span th:text="${data.roadmapTaskCount}">4</span> tasks completed
+                                </p>
+                                <div class="progress mb-2">
+                                    <div class="progress-bar" role="progressbar"
+                                         th:style="'width:' + ${data.roadmapProgressPercent} + '%'"></div>
+                                </div>
+                                <a class="btn btn-sm btn-outline-primary" th:href="@{/roadmap}">Open roadmap</a>
+                            </div>
+                            <div class="empty-state" th:if="${data.roadmapTaskCount == 0}">
+                                <p class="mb-2">No learning roadmap yet.</p>
+                                <a class="btn btn-sm btn-primary" th:href="@{/roadmap}">Create one from your gaps</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <!-- Recent assessments -->
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header">Recent assessment results</div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive" th:if="${!data.recentAttempts.isEmpty()}">
+                                <table class="table table-hover">
+                                    <thead><tr><th>Assessment</th><th>Score</th><th>Result</th></tr></thead>
+                                    <tbody>
+                                    <tr th:each="attempt : ${data.recentAttempts}">
+                                        <td>
+                                            <a th:href="@{/assessments/attempts/{id}(id=${attempt.id})}"
+                                               th:text="${attempt.assessment.title}">Java Basics</a>
+                                        </td>
+                                        <td th:text="${attempt.scorePercent} + '%'">80%</td>
+                                        <td>
+                                            <span th:class="${attempt.passed} ? 'badge badge-met' : 'badge badge-critical'"
+                                                  th:text="${attempt.passed} ? 'Passed' : 'Needs work'">Passed</span>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p class="p-3 mb-0 muted" th:if="${data.recentAttempts.isEmpty()}">
+                                No assessments completed yet. <a th:href="@{/assessments}">Take one</a>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analysis history -->
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header">Recent analysis history</div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive" th:if="${!data.recentSessions.isEmpty()}">
+                                <table class="table table-hover">
+                                    <thead><tr><th>Target</th><th>Date</th><th>Alignment</th></tr></thead>
+                                    <tbody>
+                                    <tr th:each="item : ${data.recentSessions}">
+                                        <td>
+                                            <a                                               th:href="@{/analysis/{id}(id=${item.id})}"                                                th:text="${item.targetLabel}">Java Developer</a>
+                                        </td>
+                                        <td th:text="${@ui.dateTime(item.analyzedAt)}">date</td>
+                                        <td th:text="${item.alignmentPercentage} + '%'">65%</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p class="p-3 mb-0 muted" th:if="${data.recentSessions.isEmpty()}">
+                                No analyses yet. <a th:href="@{/analysis}">Run your first one</a>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<script th:src="@{/vendor/chart.umd.js}"></script>
+<script th:if="${data.latestAnalysis != null}" th:inline="javascript">
+    var chartData = /*[[${chartData}]]*/ "{}";
+    (function () {
+        var parsed = JSON.parse(chartData);
+        if (!parsed.labels.length) { return; }
+        var ctx = document.getElementById('skillsChart');
+        if (!ctx) { return; }
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: parsed.labels,
+                datasets: [
+                    { label: 'Your level', data: parsed.current, backgroundColor: '#2f6fed' },
+                    { label: 'Required level', data: parsed.required, backgroundColor: '#c9d6ef' }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, max: 5, ticks: { stepSize: 1 } }
+                },
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+    })();
+</script>
+<script th:src="@{/vendor/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

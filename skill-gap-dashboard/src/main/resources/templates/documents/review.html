@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Review extracted skills')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar('/documents')}"></aside>
+    <div class="main">
+        <header th:replace="~{fragments/layout :: topbar}"></header>
+        <main class="content">
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <h2 class="page-title">Review extracted skills</h2>
+            <p class="page-subtitle">
+                <span th:text="${document != null and document.originalFilename != null} ? ${document.originalFilename} : 'Typed text'">file</span>
+                &middot; status: <span th:text="${run.status}">COMPLETED</span>
+                &middot; detected <span th:text="${run.candidateCount}">0</span> catalog skill(s)
+            </p>
+
+            <div class="alert alert-warning" th:if="${run.status.name() == 'FAILED'}"
+                 th:text="${run.message}">Could not read the document.</div>
+
+            <div class="mb-3">
+                <a class="btn btn-sm btn-outline-secondary" th:href="@{/documents}">&larr; Back to documents</a>
+            </div>
+
+            <div class="card mb-3" th:if="${document != null and document.extractedText != null}">
+                <div class="card-header">Extracted text (preview - treated as untrusted data)</div>
+                <div class="card-body">
+                    <p class="snippet mb-0" th:text="${@ui.abbreviate(document.extractedText, 600)}">text...</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Detected skills - confirm or reject each one</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" th:if="${!evidence.isEmpty()}">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                            <tr>
+                                <th>Skill</th><th>Where it was found</th><th>Confidence</th>
+                                <th>Status</th><th class="text-end">Decision</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="ev : ${evidence}">
+                                <td><strong th:text="${ev.skill.name}">Java</strong></td>
+                                <td><div class="snippet" th:text="${ev.contextSnippet}">snippet</div></td>
+                                <td th:text="${#numbers.formatDecimal(ev.confidence * 100, 1, 0)} + '%'">90%</td>
+                                <td>
+                                    <span th:class="${ev.verificationStatus.name() == 'CONFIRMED'} ? 'badge badge-met' : (${ev.verificationStatus.name() == 'REJECTED'} ? 'badge badge-low' : 'badge badge-high')"
+                                          th:text="${ev.verificationStatus}">PENDING</span>
+                                    <div class="muted" th:if="${ev.confirmedLevel != null}"
+                                         th:text="'level ' + ${ev.confirmedLevel}">level 3</div>
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-2"
+                                         th:if="${ev.verificationStatus.name() == 'PENDING'}">
+                                        <form th:action="@{/documents/evidence/{id}/confirm(id=${ev.id})}" method="post"
+                                              class="d-flex gap-2 align-items-center">
+                                            <select class="form-select form-select-sm" name="level" style="width:auto">
+                                                <option value="1">1 Beginner</option>
+                                                <option value="2">2 Basic</option>
+                                                <option value="3" selected>3 Intermediate</option>
+                                                <option value="4">4 Advanced</option>
+                                                <option value="5">5 Expert</option>
+                                            </select>
+                                            <button class="btn btn-sm btn-primary" type="submit">Confirm</button>
+                                        </form>
+                                        <form th:action="@{/documents/evidence/{id}/reject(id=${ev.id})}" method="post">
+                                            <button class="btn btn-sm btn-outline-danger" type="submit">Reject</button>
+                                        </form>
+                                    </div>
+                                    <span class="muted" th:if="${ev.verificationStatus.name() != 'PENDING'}">Reviewed</span>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="empty-state m-3" th:if="${evidence.isEmpty()}">
+                        <h5>No skills detected</h5>
+                        <p class="mb-0">
+                            Nothing matched the skill catalog in this document.
+                            <a th:href="@{/skills}">Add your skills manually</a>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <p class="muted mt-3" style="font-size:0.82rem">
+                Confirmed skills are saved to <a th:href="@{/skills}">My Skills</a> together with this evidence
+                (source, snippet, confidence). Rejected items stay recorded so we do not ask again.
+            </p>
+
+        </main>
+    </div>
+</div>
+<script th:src="@{/vendor/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

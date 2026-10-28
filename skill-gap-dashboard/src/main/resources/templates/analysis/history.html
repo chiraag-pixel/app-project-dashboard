@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Analysis History')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar('/analysis')}"></aside>
+    <div class="main">
+        <header th:replace="~{fragments/layout :: topbar}"></header>
+        <main class="content">
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="page-title">Analysis history</h2>
+                <a class="btn btn-primary btn-sm" th:href="@{/analysis}">Run new analysis</a>
+            </div>
+
+            <div class="card">
+                <div class="card-body p-0">
+                    <table class="table table-hover" th:if="${!history.isEmpty()}">
+                        <thead>
+                        <tr>
+                            <th>Date</th><th>Target</th><th>Type</th>
+                            <th class="text-end">Alignment</th>
+                            <th class="text-end">Critical gaps</th>
+                            <th class="text-end">Required skills</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="s : ${history}">
+                            <td th:text="${@ui.dateTime(s.analyzedAt)}">date</td>
+                            <td th:text="${s.targetLabel}">Target</td>
+                            <td><span class="badge badge-low" th:text="${s.targetType}">JOB_ROLE</span></td>
+                            <td class="text-end"><strong th:text="${@ui.pct(s.alignmentPercentage)}">0%</strong></td>
+                            <td class="text-end" th:text="${s.criticalGapCount}">0</td>
+                            <td class="text-end" th:text="${s.requiredSkillCount}">0</td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-primary"
+                                   th:href="@{/analysis/{id}(id=${s.id})}">View</a>
+                                <a class="btn btn-sm btn-outline-secondary"
+                                   th:href="@{/reports/{id}(id=${s.id})}">Report</a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <div class="empty-state m-3" th:if="${history.isEmpty()}">
+                        <h5>No saved analyses</h5>
+                        <p class="mb-0">Run your first analysis from the Skill Gap Analysis page.</p>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+<script th:src="@{/vendor/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

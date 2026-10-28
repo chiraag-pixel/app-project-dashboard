@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Reports')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar('/reports')}"></aside>
+    <div class="main">
+        <header th:replace="~{fragments/layout :: topbar}"></header>
+        <main class="content">
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <h2 class="page-title">Reports</h2>
+            <p class="page-subtitle">Each saved analysis can be opened as a printable report
+                (use your browser's Print / Save as PDF).</p>
+
+            <div class="card">
+                <div class="card-body p-0">
+                    <table class="table table-hover" th:if="${!sessions.isEmpty()}">
+                        <thead>
+                        <tr><th>Date</th><th>Target</th><th class="text-end">Alignment</th><th class="text-end">Actions</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="s : ${sessions}">
+                            <td th:text="${@ui.dateTime(s.analyzedAt)}">date</td>
+                            <td th:text="${s.targetLabel}">Target</td>
+                            <td class="text-end"><strong th:text="${@ui.pct(s.alignmentPercentage)}">0%</strong></td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-primary" th:href="@{/reports/{id}(id=${s.id})}">Open report</a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <div class="empty-state m-3" th:if="${sessions.isEmpty()}">
+                        <h5>No reports yet</h5>
+                        <p class="mb-0">Run an analysis first - every analysis automatically becomes a report.</p>
+                        <a class="btn btn-primary mt-2" th:href="@{/analysis}">Run an analysis</a>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+<script th:src="@{/vendor/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Admin - Assessments')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar('/admin')}"></aside>
+    <div class="main">
+        <header th:replace="~{fragments/layout :: topbar}"></header>
+        <main class="content">
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="page-title">Assessments</h2>
+                <a class="btn btn-outline-secondary btn-sm" th:href="@{/admin}">&larr; Admin home</a>
+            </div>
+
+            <!-- Create assessment -->
+            <div class="card mb-3">
+                <div class="card-header">Create assessment</div>
+                <div class="card-body">
+                    <form th:action="@{/admin/assessments/add}" method="post" class="row g-2 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label">Title *</label>
+                            <input class="form-control" name="title" required placeholder="e.g. Java Basics Quiz">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Skill *</label>
+                            <select class="form-select" name="skillId" required>
+                                <option th:each="s : ${skills}" th:value="${s.id}" th:text="${s.name}">Java</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Pass mark %</label>
+                            <input class="form-control" type="number" name="passingScore" value="60"
+                                   min="0" max="100" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Description</label>
+                            <input class="form-control" name="description" placeholder="Optional">
+                        </div>
+                        <div class="col-md-1">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="active" value="true" checked>
+                                <label class="form-check-label">Active</label>
+                            </div>
+                        </div>
+                        <div class="col-md-1">
+                            <button class="btn btn-primary w-100" type="submit">Create</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Assessment list -->
+            <div class="card mb-3">
+                <div class="card-header">Existing assessments</div>
+                <div class="card-body p-0">
+                    <table class="table table-hover" th:if="${!assessments.isEmpty()}">
+                        <thead>
+                        <tr><th>Title</th><th>Skill</th><th class="text-end">Questions</th>
+                            <th class="text-end">Pass</th><th>Status</th><th class="text-end">Actions</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="a : ${assessments}">
+                            <td>
+                                <strong th:text="${a.title}">Quiz</strong>
+                                <div class="muted" style="font-size:0.78rem" th:text="${a.description} ?: '-'">desc</div>
+                            </td>
+                            <td th:text="${a.skill.name}">Java</td>
+                            <td class="text-end" th:text="${#lists.size(a.questions)}">0</td>
+                            <td class="text-end" th:text="${a.passingScore} + '%'">60%</td>
+                            <td>
+                                <span th:class="${a.active} ? 'badge badge-met' : 'badge badge-low'"
+                                      th:text="${a.active} ? 'Active' : 'Hidden'">Active</span>
+                            </td>
+                            <td class="text-end">
+                                <form th:action="@{/admin/assessments/{id}/status(id=${a.id})}" method="post"
+                                      class="d-inline">
+                                    <input type="hidden" name="active" th:value="${!a.active}">
+                                    <button class="btn btn-sm btn-outline-secondary" type="submit"
+                                            th:text="${a.active} ? 'Hide' : 'Publish'">Hide</button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <div class="empty-state m-3" th:if="${assessments.isEmpty()}">
+                        <p class="mb-0">No assessments yet - create one above, then add questions.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add question per assessment -->
+            <div class="card mb-3" th:each="a : ${assessments}">
+                <div class="card-header">
+                    Add question to <span th:text="${a.title}">Quiz</span>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/admin/assessments/{id}/questions/add(id=${a.id})}" method="post"
+                          class="row g-2">
+                        <div class="col-12">
+                            <label class="form-label">Question text *</label>
+                            <input class="form-control" name="questionText" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Option 1 *</label>
+                            <input class="form-control" name="option1" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Option 2 *</label>
+                            <input class="form-control" name="option2" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Option 3</label>
+                            <input class="form-control" name="option3">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Option 4</label>
+                            <input class="form-control" name="option4">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Correct option (1-based)</label>
+                            <select class="form-select" name="correctIndex">
+                                <option th:each="i : ${@ui.range(1,4)}" th:value="${i - 1}" th:text="'Option ' + ${i}">Option 1</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary w-100" type="submit">Add question</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+<script th:src="@{/vendor/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

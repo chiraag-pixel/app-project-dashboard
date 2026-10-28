@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Learning Roadmap')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar('/roadmap')}"></aside>
+    <div class="main">
+        <header th:replace="~{fragments/layout :: topbar}"></header>
+        <main class="content">
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <h2 class="page-title">Learning Roadmap</h2>
+            <p class="page-subtitle">Tasks generated from your real skill gaps (or added by you), with progress
+                tracked from task status.</p>
+
+            <!-- Generate from an analysis -->
+            <div class="card mb-3" th:if="${sessions != null and !sessions.isEmpty()}">
+                <div class="card-header">Generate a plan from a saved analysis</div>
+                <div class="card-body">
+                    <form th:action="@{/roadmap/generate}" method="post" class="row g-2 align-items-end">
+                        <div class="col-md-6">
+                            <label class="form-label" for="sessionId">Analysis</label>
+                            <select class="form-select" id="sessionId" name="sessionId" required>
+                                <option th:each="s : ${sessions}" th:value="${s.id}"
+                                        th:text="${s.targetLabel} + ' - ' + ${@ui.dateTime(s.analyzedAt)}">Analysis</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-primary" type="submit">Generate roadmap</button>
+                        </div>
+                        <div class="col-md-12 muted" style="font-size:0.8rem">
+                            Replaces your current plan with tasks ordered by priority. Progress starts at 0%.
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Roadmap -->
+            <div th:if="${roadmap != null}">
+                <div class="card mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span th:text="${roadmap.title}">My roadmap</span>
+                        <span class="badge badge-met" th:text="'Progress: ' + ${progress} + '%'">0%</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar" role="progressbar" th:style="'width:' + ${progress} + '%'"
+                                 th:aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <div class="muted mt-2" style="font-size:0.8rem">
+                            Target: <span th:text="${roadmap.targetLabel} ?: 'custom plan'">target</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header">Tasks</div>
+                    <div class="card-body p-0">
+                        <table class="table table-hover align-middle" th:if="${!tasks.isEmpty()}">
+                            <thead>
+                            <tr>
+                                <th>Task</th><th>Skill</th><th>Priority</th><th>Difficulty</th>
+                                <th class="text-end">Hours</th><th>Planned</th><th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="t : ${tasks}">
+                                <td>
+                                    <strong th:text="${t.title}">Task</strong>
+                                    <a th:if="${t.url != null}" th:href="${t.url}" target="_blank" rel="noopener"
+                                       class="ms-1" style="font-size:0.8rem">resource</a>
+                                </td>
+                                <td th:text="${t.skill != null} ? ${t.skill.name} : '-'">skill</td>
+                                <td><span th:class="'badge ' + ${@ui.priorityBadge(t.priority)}"
+                                          th:text="${t.priority}">HIGH</span></td>
+                                <td th:text="${t.difficulty} + '/5'">3/5</td>
+                                <td class="text-end" th:text="${t.estimatedHours != null} ? ${t.estimatedHours} : '-'">-</td>
+                                <td th:text="${t.plannedDate != null} ? ${t.plannedDate} : '-'">date</td>
+                                <td>
+                                    <form th:action="@{/roadmap/tasks/{id}/status(id=${t.id})}" method="post"
+                                          class="d-flex gap-1">
+                                        <select class="form-select form-select-sm" name="status" style="width:9rem"
+                                                onchange="this.form.submit()">
+                                            <option value="NOT_STARTED"
+                                                    th:selected="${t.status.name() == 'NOT_STARTED'}">Not started</option>
+                                            <option value="IN_PROGRESS"
+                                                    th:selected="${t.status.name() == 'IN_PROGRESS'}">In progress</option>
+                                            <option value="COMPLETED"
+                                                    th:selected="${t.status.name() == 'COMPLETED'}">Completed</option>
+                                        </select>
+                                    </form>
+                                </td>
+                                <td class="text-end">
+                                    <form th:action="@{/roadmap/tasks/{id}/delete(id=${t.id})}" method="post"
+                                          class="d-inline">
+                                        <button class="btn btn-sm btn-outline-danger" type="submit"
+                                                data-confirm="Remove this task?">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <div class="empty-state m-3" th:if="${tasks.isEmpty()}">
+                            <p class="mb-0">No tasks yet. Generate a plan from an analysis or add one below.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty state -->
+            <div class="card mb-3" th:if="${roadmap == null}">
+                <div class="empty-state">
+                    <h5>No roadmap yet</h5>
+                    <p>Run a skill gap analysis first, then generate a learning plan from it - or add tasks
+                        manually below.</p>
+                    <a class="btn btn-primary" th:href="@{/analysis}">Go to Skill Gap Analysis</a>
+                </div>
+            </div>
+
+            <!-- Add task -->
+            <div class="card">
+                <div class="card-header">Add a task manually</div>
+                <div class="card-body">
+                    <form th:action="@{/roadmap/tasks/add}" th:object="${taskForm}" method="post"
+                          class="row g-2 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label" for="tTitle">Title *</label>
+                            <input class="form-control" id="tTitle" th:field="*{title}" required
+                                   placeholder="e.g. Finish Spring Boot course chapter 3">
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('title')}"
+                                 th:errors="*{title}">error</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="tUrl">Resource URL</label>
+                            <input class="form-control" id="tUrl" th:field="*{url}" placeholder="https://...">
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label" for="tDiff">Difficulty</label>
+                            <select class="form-select" id="tDiff" th:field="*{difficulty}">
+                                <option th:each="d : ${@ui.range(1,5)}" th:value="${d}" th:text="${d}">3</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label" for="tHours">Hours</label>
+                            <input class="form-control" id="tHours" th:field="*{estimatedHours}" type="number"
+                                   step="0.5" min="0">
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label" for="tPrio">Priority</label>
+                            <select class="form-select" id="tPrio" th:field="*{priority}">
+                                <option value="CRITICAL">Critical</option>
+                                <option value="HIGH">High</option>
+                                <option value="MEDIUM">Medium</option>
+                                <option value="LOW">Low</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label" for="tDate">Planned</label>
+                            <input class="form-control" id="tDate" th:field="*{plannedDate}" type="date">
+                        </div>
+                        <div class="col-md-1">
+                            <button class="btn btn-primary w-100" type="submit">Add</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+<script th:src="@{/vendor/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

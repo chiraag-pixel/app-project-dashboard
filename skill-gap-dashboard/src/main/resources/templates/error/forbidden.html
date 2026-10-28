@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Access denied')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar('/dashboard')}"></aside>
+    <div class="main">
+        <header th:replace="~{fragments/layout :: topbar}"></header>
+        <main class="content">
+            <div class="empty-state">
+                <h5>Access denied</h5>
+                <p th:text="${message}">You do not have permission to view this page.</p>
+                <a class="btn btn-primary" th:href="@{/dashboard}">Back to dashboard</a>
+            </div>
+        </main>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Skill Gap Analysis')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar('/analysis')}"></aside>
+    <div class="main">
+        <header th:replace="~{fragments/layout :: topbar}"></header>
+        <main class="content">
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <h2 class="page-title">Skill Gap Analysis</h2>
+            <p class="page-subtitle">Choose a target, then compare your current skills against its requirements.
+                Every number is calculated on the server from your saved data.</p>
+
+            <div class="row g-3">
+                <!-- Predefined roles -->
+                <div class="col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-header">1. Predefined job role</div>
+                        <div class="card-body">
+                            <form th:action="@{/analysis/run/role}" method="post">
+                                <div class="mb-3">
+                                    <label class="form-label" for="jobRoleId">Job role</label>
+                                    <select class="form-select" id="jobRoleId" name="jobRoleId" required>
+                                        <option value="" disabled selected>-- select a role --</option>
+                                        <option th:each="role : ${roles}" th:value="${role.id}"
+                                                th:text="${role.name}">Java Developer</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary w-100" type="submit">Run analysis</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Work specification -->
+                <div class="col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-header">2. Work specification</div>
+                        <div class="card-body">
+                            <div th:if="${workSpecs.isEmpty()}" class="empty-state">
+                                <p class="mb-2">No work specifications yet.</p>
+                                <a class="btn btn-sm btn-outline-primary" th:href="@{/work-specs}">Create one</a>
+                            </div>
+                            <form th:if="${!workSpecs.isEmpty()}" th:action="@{/analysis/run/document}" method="post">
+                                <div class="mb-3">
+                                    <label class="form-label" for="specId">Saved specification</label>
+                                    <select class="form-select" id="specId" name="documentId" required>
+                                        <option th:each="doc : ${workSpecs}" th:value="${doc.id}"
+                                                th:text="${doc.title}">Spec</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary w-100" type="submit">Run analysis</button>
+                                <p class="muted mt-2 mb-0" style="font-size:0.8rem">
+                                    Only confirmed requirements are used.
+                                </p>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custom job description -->
+                <div class="col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-header">3. Custom job description</div>
+                        <div class="card-body">
+                            <div th:if="${customJobs.isEmpty()}" class="empty-state">
+                                <p class="mb-2">No saved job descriptions yet.</p>
+                                <a class="btn btn-sm btn-outline-primary" th:href="@{/work-specs}">Add one</a>
+                            </div>
+                            <form th:if="${!customJobs.isEmpty()}" th:action="@{/analysis/run/document}" method="post">
+                                <div class="mb-3">
+                                    <label class="form-label" for="jdId">Saved job description</label>
+                                    <select class="form-select" id="jdId" name="documentId" required>
+                                        <option th:each="doc : ${customJobs}" th:value="${doc.id}"
+                                                th:text="${doc.title}">Job</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary w-100" type="submit">Run analysis</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History -->
+            <div class="card mt-3">
+                <div class="card-header">Recent analyses</div>
+                <div class="card-body p-0">
+                    <table class="table table-hover" th:if="${!history.isEmpty()}">
+                        <thead>
+                        <tr>
+                            <th>Date</th><th>Target</th><th>Type</th><th class="text-end">Alignment</th>
+                            <th class="text-end">Critical gaps</th><th class="text-end">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="s : ${history}">
+                            <td th:text="${@ui.dateTime(s.analyzedAt)}">date</td>
+                            <td th:text="${s.targetLabel}">Java Developer</td>
+                            <td><span class="badge badge-low" th:text="${s.targetType}">JOB_ROLE</span></td>
+                            <td class="text-end"><strong th:text="${@ui.pct(s.alignmentPercentage)}">0%</strong></td>
+                            <td class="text-end" th:text="${s.criticalGapCount}">0</td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-primary"
+                                   th:href="@{/analysis/{id}(id=${s.id})}">View</a>
+                                <a class="btn btn-sm btn-outline-secondary"
+                                   th:href="@{/reports/{id}(id=${s.id})}">Report</a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <div class="empty-state m-3" th:if="${history.isEmpty()}">
+                        <h5>No analyses yet</h5>
+                        <p class="mb-0">Pick a target above to run your first skill gap analysis.</p>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+<script th:src="@{/vendor/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

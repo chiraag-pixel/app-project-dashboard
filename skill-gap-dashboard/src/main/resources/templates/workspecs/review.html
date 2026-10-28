@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Review requirements')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar('/work-specs')}"></aside>
+    <div class="main">
+        <header th:replace="~{fragments/layout :: topbar}"></header>
+        <main class="content">
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <h2 class="page-title" th:text="${document.title}">Spec title</h2>
+            <p class="page-subtitle">
+                Type: <span th:text="${document.documentType}">WORK_SPECIFICATION</span>
+                &middot; confirm the detected requirements below, then run the analysis.
+            </p>
+
+            <div class="mb-3 d-flex gap-2">
+                <a class="btn btn-sm btn-outline-secondary" th:href="@{/work-specs}">&larr; Back</a>
+                <form th:action="@{/work-specs/{id}/analyze(id=${document.id})}" method="post">
+                    <button class="btn btn-sm btn-primary" type="submit">Run gap analysis</button>
+                </form>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header">Description (your text)</div>
+                <div class="card-body">
+                    <p class="snippet mb-0" style="white-space: pre-wrap"
+                       th:text="${@ui.abbreviate(document.extractedText, 800)}">text</p>
+                </div>
+            </div>
+
+            <!-- Detected requirements -->
+            <div class="card mb-3">
+                <div class="card-header">Detected requirements</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" th:if="${!requirements.isEmpty()}">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                            <tr>
+                                <th>Skill</th><th>Evidence</th><th>Level</th><th>Weight</th><th>Type</th>
+                                <th>Status</th><th class="text-end">Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="req : ${requirements}">
+                                <form th:action="${req.verificationStatus.name() == 'PENDING'}
+                                              ? @{/work-specs/{id}/requirements/{rid}/confirm(id=${document.id}, rid=${req.id})}
+                                              : @{/work-specs/{id}/requirements/{rid}/update(id=${document.id}, rid=${req.id})}"
+                                      method="post">
+                                    <td><strong th:text="${req.skill.name}">Java</strong></td>
+                                    <td><div class="snippet" th:text="${req.contextSnippet}">snippet</div></td>
+                                    <td>
+                                        <select class="form-select form-select-sm" name="level" style="width:9rem">
+                                            <option th:each="lvl : ${@ui.range(1,5)}" th:value="${lvl}"
+                                                    th:text="${@ui.levelLabel(lvl)}"
+                                                    th:selected="${lvl == req.requiredLevel}">3 - Intermediate</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm" name="weight" style="width:5rem">
+                                            <option th:each="w : ${@ui.range(1,5)}" th:value="${w}"
+                                                    th:text="${w}" th:selected="${w == req.weight}">3</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm" name="type" style="width:8rem">
+                                            <option value="REQUIRED" th:selected="${req.requirementType.name() == 'REQUIRED'}">Required</option>
+                                            <option value="PREFERRED" th:selected="${req.requirementType.name() == 'PREFERRED'}">Preferred</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <span th:class="${req.verificationStatus.name() == 'CONFIRMED'} ? 'badge badge-met' : (${req.verificationStatus.name() == 'REJECTED'} ? 'badge badge-low' : 'badge badge-high')"
+                                              th:text="${req.verificationStatus}">PENDING</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-primary" type="submit"
+                                                th:text="${req.verificationStatus.name() == 'PENDING'} ? 'Confirm' : 'Save'">Confirm</button>
+                                        <button class="btn btn-sm btn-outline-danger" type="submit"
+                                                th:formaction="@{/work-specs/{id}/requirements/{rid}/reject(id=${document.id}, rid=${req.id})}">Reject</button>
+                                    </td>
+                                </form>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="empty-state m-3" th:if="${requirements.isEmpty()}">
+                        <h5>No requirements detected</h5>
+                        <p class="mb-0">Add at least one requirement below before running the analysis.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add a requirement -->
+            <div class="card">
+                <div class="card-header">Add a requirement manually</div>
+                <div class="card-body">
+                    <form th:action="@{/work-specs/{id}/requirements/add(id=${document.id})}" method="post"
+                          class="row g-2 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label">Skill from catalog</label>
+                            <select class="form-select" name="skillId">
+                                <option value="">-- or type a new one --</option>
+                                <option th:each="skill : ${catalogSkills}" th:value="${skill.id}"
+                                        th:text="${skill.name}">Java</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">New skill name</label>
+                            <input class="form-control" name="newSkillName" placeholder="e.g. Kafka">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Level</label>
+                            <select class="form-select" name="level">
+                                <option th:each="lvl : ${@ui.range(1,5)}" th:value="${lvl}"
+                                        th:text="${@ui.levelLabel(lvl)}">3 - Intermediate</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label">Weight</label>
+                            <select class="form-select" name="weight">
+                                <option th:each="w : ${@ui.range(1,5)}" th:value="${w}" th:text="${w}">3</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label">Type</label>
+                            <select class="form-select" name="type">
+                                <option value="REQUIRED">Req.</option>
+                                <option value="PREFERRED">Pref.</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <button class="btn btn-primary w-100" type="submit">Add</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+<script th:src="@{/vendor/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

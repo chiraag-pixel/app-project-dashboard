@@ -1,0 +1,26 @@
+# Build output
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+
+# Runtime data created by the application
+data/
+uploads/
+*.log
+
+# Secrets / local configuration overrides
+.env
+src/main/resources/application-local.properties
+
+# OS files
+Thumbs.db
+.DS_Store

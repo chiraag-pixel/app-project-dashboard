@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Resume & Documents')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar('/documents')}"></aside>
+    <div class="main">
+        <header th:replace="~{fragments/layout :: topbar}"></header>
+        <main class="content">
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <h2 class="page-title">Resume &amp; Documents</h2>
+            <p class="page-subtitle">Upload a PDF or DOCX resume (or a job description). We extract readable text,
+                match it against the skill catalog, and let you confirm what actually applies to you.</p>
+
+            <div class="row g-3 mb-4">
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header">Upload resume</div>
+                        <div class="card-body">
+                            <form th:action="@{/documents/resume/upload}" method="post" enctype="multipart/form-data"
+                                  data-loading>
+                                <div class="mb-3">
+                                    <label class="form-label" for="resumeFile">Resume file (PDF or DOCX, max 10 MB)</label>
+                                    <input class="form-control" type="file" id="resumeFile" name="file"
+                                           accept=".pdf,.docx" required>
+                                </div>
+                                <button class="btn btn-primary" type="submit">Upload &amp; extract skills</button>
+                            </form>
+                            <div class="loading-indicator mt-3">
+                                <div class="spinner-border text-primary spinner-border-sm" role="status"></div>
+                                <span class="muted">Processing document - this may take a few seconds...</span>
+                            </div>
+                            <p class="muted mt-3 mb-0" style="font-size:0.82rem">
+                                Notes: scanned/image-only PDFs are not supported (no OCR). Extracted text is treated
+                                as untrusted data - nothing in your file is ever executed.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header">Upload job description</div>
+                        <div class="card-body">
+                            <form th:action="@{/documents/job-description/upload}" method="post"
+                                  enctype="multipart/form-data" data-loading>
+                                <div class="mb-3">
+                                    <label class="form-label" for="jdFile">Job description file (PDF or DOCX)</label>
+                                    <input class="form-control" type="file" id="jdFile" name="file"
+                                           accept=".pdf,.docx" required>
+                                </div>
+                                <button class="btn btn-primary" type="submit">Upload &amp; extract requirements</button>
+                            </form>
+                            <div class="loading-indicator mt-3">
+                                <div class="spinner-border text-primary spinner-border-sm" role="status"></div>
+                                <span class="muted">Processing document...</span>
+                            </div>
+                            <p class="muted mt-3 mb-0" style="font-size:0.82rem">
+                                You can also <a th:href="@{/work-specs}">paste a job description or work
+                                specification</a> as text instead of uploading a file.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header">Extraction runs</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" th:if="${!runs.isEmpty()}">
+                        <table class="table table-hover">
+                            <thead>
+                            <tr><th>Document</th><th>Type</th><th>Status</th><th>Detected</th><th>When</th><th></th></tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="run : ${runs}">
+                                <td th:text="${run.inputDocument != null and run.inputDocument.originalFilename != null}
+                                              ? ${run.inputDocument.originalFilename} : 'text input'">resume.pdf</td>
+                                <td th:text="${run.inputDocument != null} ? ${run.inputDocument.documentType} : '-'">RESUME</td>
+                                <td>
+                                    <span th:class="${run.status.name()} == 'COMPLETED' ? 'badge badge-met' : 'badge badge-critical'"
+                                          th:text="${run.status}">COMPLETED</span>
+                                    <div class="muted" th:text="${run.message}">msg</div>
+                                </td>
+                                <td th:text="${run.candidateCount}">3</td>
+                                <td th:text="${@ui.dateTime(run.createdAt)}">date</td>
+                                <td class="text-end">
+                                    <a class="btn btn-sm btn-outline-primary"
+                                       th:href="@{/documents/runs/{id}(id=${run.id})}"
+                                       th:text="${run.status.name()} == 'COMPLETED' ? 'Review skills' : 'Details'">Review</a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="empty-state m-3" th:if="${runs.isEmpty()}">
+                        <h5>No documents yet</h5>
+                        <p class="mb-0">Upload your resume above to detect skills automatically.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">All documents</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" th:if="${!documents.isEmpty()}">
+                        <table class="table table-hover">
+                            <thead>
+                            <tr><th>File</th><th>Type</th><th>Size</th><th>Uploaded</th><th></th></tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="doc : ${documents}">
+                                <td th:text="${doc.originalFilename ?: doc.title}">file</td>
+                                <td th:text="${doc.documentType}">RESUME</td>
+                                <td th:text="${doc.fileSizeBytes != null} ? ${#numbers.formatInteger(doc.fileSizeBytes / 1024, 1)} + ' KB' : '-'">12 KB</td>
+                                <td th:text="${@ui.dateTime(doc.uploadedAt)}">date</td>
+                                <td class="text-end">
+                                    <a class="btn btn-sm btn-outline-secondary"
+                                       th:if="${doc.storedPath != null}"
+                                       th:href="@{/documents/{id}/download(id=${doc.id})}">Download</a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="p-3 mb-0 muted" th:if="${documents.isEmpty()}">No documents uploaded.</p>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+<script th:src="@{/vendor/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

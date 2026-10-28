@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Register')}"></head>
+<body>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card">
+                <div class="card-body p-4">
+                    <h4 class="mb-1">Create your account</h4>
+                    <p class="muted mb-4">Register to start tracking your skills and gaps.</p>
+
+                    <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}">Error.</div>
+
+                    <form th:action="@{/register}" th:object="${registerForm}" method="post">
+                        <div class="mb-3">
+                            <label class="form-label" for="fullName">Full name</label>
+                            <input class="form-control" th:field="*{fullName}" id="fullName" required>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('fullName')}"
+                                 th:errors="*{fullName}">Name error</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="email">Email</label>
+                            <input class="form-control" type="email" th:field="*{email}" id="email" required>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('email')}"
+                                 th:errors="*{email}">Email error</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="password">Password (min 8 characters)</label>
+                            <input class="form-control" type="password" th:field="*{password}" id="password"
+                                   minlength="8" required>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('password')}"
+                                 th:errors="*{password}">Password error</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="confirmPassword">Confirm password</label>
+                            <input class="form-control" type="password" th:field="*{confirmPassword}"
+                                   id="confirmPassword" required>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('confirmPassword')}"
+                                 th:errors="*{confirmPassword}">Confirm error</div>
+                        </div>
+                        <button class="btn btn-primary w-100" type="submit">Register</button>
+                    </form>
+
+                    <p class="mt-3 mb-0 muted">
+                        Already registered? <a th:href="@{/login}">Log in</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

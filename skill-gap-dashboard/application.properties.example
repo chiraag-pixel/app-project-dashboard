@@ -1,0 +1,26 @@
+# Copy this file to src/main/resources/application.properties and adjust it
+# for your machine. Do not commit real passwords.
+#
+#   1. Create the database first:  CREATE DATABASE skillgap CHARACTER SET utf8mb4;
+#   2. Set your MySQL user/password below (or via environment variables
+#      DB_URL, DB_USERNAME, DB_PASSWORD).
+
+spring.datasource.url=jdbc:mysql://localhost:3306/skillgap?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=utf8
+spring.datasource.username=root
+spring.datasource.password=CHANGE_ME
+
+# Hibernate creates/updates the schema from the JPA entities (repeatable schema setup).
+spring.jpa.hibernate.ddl-auto=update
+# Keep the JPA session open while Thymeleaf renders pages (lazy relations are
+# read during rendering). Recommended for this server-rendered application.
+spring.jpa.open-in-view=true
+
+# Uploaded files are stored OUTSIDE the web root; only metadata lives in MySQL.
+app.upload-dir=./data/uploads
+
+# Login throttle for sensitive operations.
+app.security.login-max-attempts=5
+app.security.login-lock-minutes=5
+
+# Set to false to skip seeding demo accounts (demo@example.com / admin@example.com).
+app.seed-demo-data=true

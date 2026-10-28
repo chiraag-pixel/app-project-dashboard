@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Work Specifications')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar('/work-specs')}"></aside>
+    <div class="main">
+        <header th:replace="~{fragments/layout :: topbar}"></header>
+        <main class="content">
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <h2 class="page-title">Work Specifications</h2>
+            <p class="page-subtitle">Describe a work assignment, project scope or custom job posting.
+                We detect the skills it needs; you confirm them, then run the analysis.</p>
+
+            <div class="row g-3">
+                <!-- New work spec -->
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header">New work specification</div>
+                        <div class="card-body">
+                            <form th:action="@{/work-specs/add}" th:object="${workSpecForm}" method="post">
+                                <div class="mb-3">
+                                    <label class="form-label" for="title">Title</label>
+                                    <input class="form-control" th:field="*{title}" id="title"
+                                           placeholder="e.g. Build a REST API for inventory management" required>
+                                    <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('title')}"
+                                         th:errors="*{title}">error</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="description">Scope, deliverables, technical
+                                        requirements and tools</label>
+                                    <textarea class="form-control" rows="7" th:field="*{description}" id="description"
+                                              placeholder="Must know Java and Spring Boot&#10;Nice to have: Docker, CI/CD&#10;Deliverables: REST API, MySQL schema, JUnit tests"
+                                              required></textarea>
+                                    <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('description')}"
+                                         th:errors="*{description}">error</div>
+                                </div>
+                                <button class="btn btn-primary" type="submit">Save &amp; detect required skills</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custom job description -->
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header">Paste a custom job description</div>
+                        <div class="card-body">
+                            <form th:action="@{/work-specs/custom-job/add}" method="post">
+                                <div class="mb-3">
+                                    <label class="form-label" for="jdTitle">Title</label>
+                                    <input class="form-control" id="jdTitle" name="title"
+                                           placeholder="e.g. Junior Java Developer at Acme Corp" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="jdText">Job description text</label>
+                                    <textarea class="form-control" rows="7" id="jdText" name="description"
+                                              placeholder="Paste the full job posting here..." required></textarea>
+                                </div>
+                                <button class="btn btn-primary" type="submit">Save &amp; detect requirements</button>
+                            </form>
+                            <p class="muted mt-3 mb-0" style="font-size:0.82rem">
+                                Prefer a file? Upload a PDF/DOCX job description on the
+                                <a th:href="@{/documents}">Resume &amp; Documents</a> page.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Saved work specs -->
+            <div class="card mt-3">
+                <div class="card-header">Saved work specifications</div>
+                <div class="card-body p-0">
+                    <table class="table table-hover" th:if="${!workSpecs.isEmpty()}">
+                        <thead>
+                        <tr><th>Title</th><th>Created</th><th class="text-end">Actions</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="doc : ${workSpecs}">
+                            <td th:text="${doc.title}">Title</td>
+                            <td th:text="${@ui.date(doc.uploadedAt)}">date</td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-primary"
+                                   th:href="@{/work-specs/{id}(id=${doc.id})}">Review requirements</a>
+                                <form th:action="@{/work-specs/{id}/delete(id=${doc.id})}" method="post"
+                                      class="d-inline">
+                                    <button class="btn btn-sm btn-outline-danger" type="submit"
+                                            data-confirm="Delete this specification and its requirements?">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <div class="empty-state m-3" th:if="${workSpecs.isEmpty()}">
+                        <p class="mb-0">No work specifications yet - create your first one above.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Saved custom job descriptions -->
+            <div class="card mt-3">
+                <div class="card-header">Saved custom job descriptions</div>
+                <div class="card-body p-0">
+                    <table class="table table-hover" th:if="${!customJobDescriptions.isEmpty()}">
+                        <thead>
+                        <tr><th>Title</th><th>Created</th><th class="text-end">Actions</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="doc : ${customJobDescriptions}">
+                            <td th:text="${doc.title}">Title</td>
+                            <td th:text="${@ui.date(doc.uploadedAt)}">date</td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-primary"
+                                   th:href="@{/work-specs/{id}(id=${doc.id})}">Review requirements</a>
+                                <form th:action="@{/work-specs/{id}/delete(id=${doc.id})}" method="post"
+                                      class="d-inline">
+                                    <button class="btn btn-sm btn-outline-danger" type="submit"
+                                            data-confirm="Delete this job description?">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <p class="p-3 mb-0 muted" th:if="${customJobDescriptions.isEmpty()}">None saved yet.</p>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+<script th:src="@{/vendor/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

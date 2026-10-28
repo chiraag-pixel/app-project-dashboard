@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title} + ' · Skill Gap Dashboard'">Skill Gap Dashboard</title>
+    <link rel="stylesheet" th:href="@{/vendor/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+
+<!-- Sidebar navigation: visible on every authenticated page -->
+<aside th:fragment="sidebar(active)" class="sidebar">
+    <a class="brand" th:href="@{/dashboard}">
+        <img class="brand-logo" th:src="@{/images/logo.svg}" alt="SkillGap Analysis Dashboard" width="208" height="56">
+        <small>Know your gaps. Plan your growth.</small>
+    </a>
+    <nav class="nav flex-column">
+        <a th:replace="~{fragments/layout :: nav-item('/dashboard', 'Dashboard', ${active})}"></a>
+        <a th:replace="~{fragments/layout :: nav-item('/skills', 'My Skills', ${active})}"></a>
+        <a th:replace="~{fragments/layout :: nav-item('/documents', 'Resume &amp; Documents', ${active})}"></a>
+        <a th:replace="~{fragments/layout :: nav-item('/job-roles', 'Job Roles', ${active})}"></a>
+        <a th:replace="~{fragments/layout :: nav-item('/work-specs', 'Work Specifications', ${active})}"></a>
+        <a th:replace="~{fragments/layout :: nav-item('/analysis', 'Skill Gap Analysis', ${active})}"></a>
+        <a th:replace="~{fragments/layout :: nav-item('/assessments', 'Assessments', ${active})}"></a>
+        <a th:replace="~{fragments/layout :: nav-item('/roadmap', 'Learning Roadmap', ${active})}"></a>
+        <a th:replace="~{fragments/layout :: nav-item('/reports', 'Reports', ${active})}"></a>
+        <a th:replace="~{fragments/layout :: nav-item('/profile', 'Profile', ${active})}"></a>
+        <a class="nav-link-side" sec:authorize="hasRole('ADMIN')" th:classappend="${active} == '/admin' ? 'active'"
+           th:href="@{/admin}">Admin Panel <span class="admin-tag">admin</span></a>
+    </nav>
+</aside>
+
+<!-- Top bar with the logged-in user and logout -->
+<header th:fragment="topbar" class="topbar">
+    <span class="muted" sec:authorize="isAuthenticated()">
+        Signed in as <strong sec:authentication="name">user</strong>
+    </span>
+    <span>
+        <a class="btn btn-sm btn-outline-secondary me-2" th:href="@{/notifications}">Notifications</a>
+        <form th:action="@{/logout}" method="post" class="d-inline">
+            <button class="btn btn-sm btn-outline-primary" type="submit">Log out</button>
+        </form>
+    </span>
+</header>
+
+<!-- Flash messages shown after redirect -->
+<div th:fragment="flash" class="mb-3">
+    <div class="alert alert-success" th:if="${message}" th:text="${message}">Saved.</div>
+    <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}">Error.</div>
+</div>
+
+<!-- Reusable nav link fragment -->
+<a th:fragment="nav-item(href, label, active)" th:class="${active == href} ? 'nav-link-side active' : 'nav-link-side'"
+   th:href="@{__${href}__}" th:text="${label}">Link</a>
+
+</body>
+</html>

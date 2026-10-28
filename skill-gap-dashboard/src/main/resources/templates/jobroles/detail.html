@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Job role details')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar('/job-roles')}"></aside>
+    <div class="main">
+        <header th:replace="~{fragments/layout :: topbar}"></header>
+        <main class="content">
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <h2 class="page-title" th:text="${role.name}">Java Developer</h2>
+            <p class="page-subtitle" th:text="${role.description}">Description</p>
+
+            <div class="mb-3 d-flex gap-2">
+                <a class="btn btn-sm btn-outline-secondary" th:href="@{/job-roles}">&larr; All roles</a>
+                <form th:action="@{/job-roles/{id}/analyze(id=${role.id})}" method="post">
+                    <button class="btn btn-sm btn-primary" type="submit">Analyze my profile against this role</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Required skills</div>
+                <div class="card-body p-0">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>Skill</th><th>Category</th><th>Required level</th><th>Weight</th><th>Type</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="rs : ${role.skills}">
+                            <td><strong th:text="${rs.skill.name}">Java</strong></td>
+                            <td th:text="${rs.skill.category != null} ? ${rs.skill.category.name} : '-'">Programming</td>
+                            <td><span class="badge badge-level" th:text="${@ui.levelLabel(rs.requiredLevel)}">4 - Advanced</span></td>
+                            <td th:text="${rs.weight} + ' / 5'">5 / 5</td>
+                            <td>
+                                <span th:class="${rs.requirementType.name()} == 'REQUIRED' ? 'badge badge-high' : 'badge badge-low'"
+                                      th:text="${rs.requirementType}">REQUIRED</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <p class="muted mt-3" style="font-size:0.82rem">
+                Weight = importance of this skill for the role (1 low - 5 critical). Preferred skills are considered
+                nice to have; only required skills count toward the alignment percentage.
+            </p>
+
+        </main>
+    </div>
+</div>
+<script th:src="@{/vendor/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

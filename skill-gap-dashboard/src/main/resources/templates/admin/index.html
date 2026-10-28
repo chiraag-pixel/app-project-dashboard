@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Admin Panel')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar('/admin')}"></aside>
+    <div class="main">
+        <header th:replace="~{fragments/layout :: topbar}"></header>
+        <main class="content">
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <h2 class="page-title">Admin Panel</h2>
+            <p class="page-subtitle">All administration endpoints are protected by server-side role checks.</p>
+
+            <!-- Stats -->
+            <div class="row g-3">
+                <div class="col-6 col-lg-3"><div class="card stat-card">
+                    <div class="stat-label">Users</div><div class="stat-value" th:text="${userCount}">0</div>
+                </div></div>
+                <div class="col-6 col-lg-3"><div class="card stat-card">
+                    <div class="stat-label">Skills</div><div class="stat-value" th:text="${skillCount}">0</div>
+                </div></div>
+                <div class="col-6 col-lg-3"><div class="card stat-card">
+                    <div class="stat-label">Job roles</div><div class="stat-value" th:text="${roleCount}">0</div>
+                </div></div>
+                <div class="col-6 col-lg-3"><div class="card stat-card">
+                    <div class="stat-label">Assessments</div><div class="stat-value" th:text="${assessmentCount}">0</div>
+                </div></div>
+                <div class="col-6 col-lg-3"><div class="card stat-card">
+                    <div class="stat-label">Learning resources</div><div class="stat-value" th:text="${resourceCount}">0</div>
+                </div></div>
+                <div class="col-6 col-lg-3"><div class="card stat-card">
+                    <div class="stat-label">Documents uploaded</div><div class="stat-value" th:text="${documentCount}">0</div>
+                </div></div>
+                <div class="col-6 col-lg-3"><div class="card stat-card">
+                    <div class="stat-label">Assessment attempts</div><div class="stat-value" th:text="${attemptCount}">0</div>
+                </div></div>
+            </div>
+
+            <!-- Quick links -->
+            <div class="row g-3 mt-1">
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header">Manage</div>
+                        <div class="card-body d-grid gap-2">
+                            <a class="btn btn-outline-primary" th:href="@{/admin/users}">Users</a>
+                            <a class="btn btn-outline-primary" th:href="@{/admin/categories}">Skill categories</a>
+                            <a class="btn btn-outline-primary" th:href="@{/admin/skills}">Skill catalog</a>
+                            <a class="btn btn-outline-primary" th:href="@{/admin/roles}">Job roles &amp; requirements</a>
+                            <a class="btn btn-outline-primary" th:href="@{/admin/assessments}">Assessments &amp; questions</a>
+                            <a class="btn btn-outline-primary" th:href="@{/admin/resources}">Learning resources</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header">Recent audit log</div>
+                        <div class="card-body p-0">
+                            <table class="table table-sm table-hover" th:if="${!recentAudit.isEmpty()}">
+                                <thead><tr><th>When</th><th>Who</th><th>Action</th></tr></thead>
+                                <tbody>
+                                <tr th:each="log : ${recentAudit}">
+                                    <td th:text="${@ui.dateTime(log.createdAt)}">date</td>
+                                    <td th:text="${log.user != null} ? ${log.user.email} : 'system'">admin</td>
+                                    <td>
+                                        <span th:text="${log.action}">action</span>
+                                        <div class="muted" style="font-size:0.75rem" th:text="${log.details}">details</div>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                            <p class="p-3 mb-0 muted" th:if="${recentAudit.isEmpty()}">No administrative changes yet.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+<script th:src="@{/vendor/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

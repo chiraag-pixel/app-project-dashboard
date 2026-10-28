@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Notifications')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar('')}"></aside>
+    <div class="main">
+        <header th:replace="~{fragments/layout :: topbar}"></header>
+        <main class="content">
+
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="page-title">Notifications</h2>
+                <form th:action="@{/notifications/read-all}" method="post">
+                    <button class="btn btn-sm btn-outline-primary" type="submit">Mark all as read</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="card-body p-0">
+                    <table class="table table-hover" th:if="${!notifications.isEmpty()}">
+                        <thead><tr><th>When</th><th>Message</th><th>Status</th></tr></thead>
+                        <tbody>
+                        <tr th:each="n : ${notifications}">
+                            <td th:text="${@ui.dateTime(n.createdAt)}">date</td>
+                            <td>
+                                <strong th:text="${n.title}">Title</strong>
+                                <div class="muted" style="font-size:0.85rem" th:text="${n.message}">message</div>
+                            </td>
+                            <td>
+                                <span th:class="${n.readFlag} ? 'badge badge-low' : 'badge badge-met'"
+                                      th:text="${n.readFlag} ? 'Read' : 'New'">New</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <div class="empty-state m-3" th:if="${notifications.isEmpty()}">
+                        <p class="mb-0">No notifications. You will hear here when an analysis, assessment or
+                            extraction finishes.</p>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+<script th:src="@{/vendor/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

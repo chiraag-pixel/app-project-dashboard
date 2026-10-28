@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Error')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar('/dashboard')}"></aside>
+    <div class="main">
+        <header th:replace="~{fragments/layout :: topbar}"></header>
+        <main class="content">
+            <div class="empty-state">
+                <h5>Something went wrong</h5>
+                <p th:text="${message}">Unexpected error.</p>
+                <a class="btn btn-primary" th:href="@{/dashboard}">Back to dashboard</a>
+            </div>
+        </main>
+    </div>
+</div>
+</body>
+</html>
